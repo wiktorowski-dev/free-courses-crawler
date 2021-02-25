@@ -68,14 +68,14 @@ def set_cookie():
 
 
 
-def scrape_pepper(uslugi_subskrypcje, szkolenia_kursy, udemy):
+def scrape_pepper():
 
-    # /szkolenia-i-kursy
-    endpoint_1_data = []
-    # /uslugi-i-subskrypcje
-    endpoint_2_data = []
-    # /udemy.com
-    endpoint_3_data = []
+    # # /szkolenia-i-kursy
+    # endpoint_1_data = []
+    # # /uslugi-i-subskrypcje
+    # endpoint_2_data = []
+    # # /udemy.com
+    # endpoint_3_data = []
 
     urls = ['https://www.pepper.pl/grupa/szkolenia-i-kursy?page={}',
             'https://www.pepper.pl/grupa/uslugi-i-subskrypcje?page={}',
@@ -85,50 +85,49 @@ def scrape_pepper(uslugi_subskrypcje, szkolenia_kursy, udemy):
 
 
     # set cookie to disable expired offers for every endpoint
-    expired_on_endpoint_1 = session().get(uslugi_subskrypcje, cookies=set_cookie())
-    expired_on_endpoint_2 = session().get(szkolenia_kursy, cookies=set_cookie())
-    expired_on_endpoint_3 = session().get(udemy, cookies=set_cookie())
+    # expired_on_endpoint_1 = session().get(uslugi_subskrypcje, cookies=set_cookie())
+    # expired_on_endpoint_2 = session().get(szkolenia_kursy, cookies=set_cookie())
+    # expired_on_endpoint_3 = session().get(udemy, cookies=set_cookie())
 
     # argspec = inspect.getfullargspec(scrape_pepper)
 
+    for endpoints in range(len(urls)):
+
+        expired_on = session().get(urls[endpoints], cookies=set_cookie())
+
+        for page in range(pages_count(expired_on)):
+            page += 1
+
+            filtered_page = session().get(urls[endpoints].format(page), cookies=set_cookie())
+
+            data.append(find_free_offers(filtered_page))
+
+    return data
 
 
-    for page in range(pages_count(expired_on_endpoint_1)):
-        page += 1
 
-        filtered_page = session().get(uslugi_subskrypcje.format(page), cookies=set_cookie())
-
-        endpoint_1_data.append(find_free_offers(filtered_page))
-
-    for page in range(pages_count(expired_on_endpoint_2)):
-        page += 1
-
-        filtered_page = session().get(szkolenia_kursy.format(page), cookies=set_cookie())
-
-        endpoint_2_data.append(find_free_offers(filtered_page))
-
-    for page in range(pages_count(expired_on_endpoint_3)):
-        page += 1
-
-        filtered_page = session().get(udemy.format(page), cookies=set_cookie())
-
-        endpoint_3_data.append(find_free_offers(filtered_page))
-
-    return endpoint_1_data, endpoint_2_data, endpoint_3_data
-
-
-# for endpoints in range(len(urls)):
+    # for page in range(pages_count(expired_on_endpoint_1)):
+    #     page += 1
     #
-    #     expired_on = session().get(urls[endpoints], cookies=set_cookie())
+    #     filtered_page = session().get(uslugi_subskrypcje.format(page), cookies=set_cookie())
     #
-    #     for page in range(pages_count(expired_on)):
-    #         print(page)
+    #     endpoint_1_data.append(find_free_offers(filtered_page))
     #
-    #         filtered_page = session().get(urls[endpoints].format(page + 1), cookies=set_cookie())
+    # for page in range(pages_count(expired_on_endpoint_2)):
+    #     page += 1
     #
-    #         data.append(find_free_offers(filtered_page))
+    #     filtered_page = session().get(szkolenia_kursy.format(page), cookies=set_cookie())
     #
-    # return data
+    #     endpoint_2_data.append(find_free_offers(filtered_page))
+    #
+    # for page in range(pages_count(expired_on_endpoint_3)):
+    #     page += 1
+    #
+    #     filtered_page = session().get(udemy.format(page), cookies=set_cookie())
+    #
+    #     endpoint_3_data.append(find_free_offers(filtered_page))
+
+    # return endpoint_1_data, endpoint_2_data, endpoint_3_data
 
 
 # SCRAPE WHOLE SITE /promocje
