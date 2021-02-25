@@ -2,7 +2,8 @@ import re
 import requests
 from bs4 import BeautifulSoup as bs
 
-url_pepper = 'https://www.pepper.pl/grupa/internet-i-uslugi?page={}'
+# url_pepper = 'https://www.pepper.pl/grupa/internet-i-uslugi?page={}'
+url_pepper = 'https://www.pepper.pl/grupa/uslugi-i-subskrypcje?page={}'
 
 
 # cookie = s.cookies.set("hide_expired=%221%22", "the cookie works",
@@ -21,8 +22,8 @@ def post(url):
     return r
 
 
-def pages_count(resp):
-    soup = bs(resp.text, 'html.parser')
+def pages_count(response):
+    soup = bs(response.text, 'html.parser')
     count = int(soup.find('span', {'class': re.compile('last-page')}).text)
     return count
 
@@ -39,7 +40,8 @@ def scrape_pepper():
     pages = []
 
     s = requests.Session()
-    s.headers.update({'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36"})
+    s.headers.update({
+                         'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36"})
     s.get(url_pepper)
 
     cookie = s.get(url_pepper, cookies=set_cookie())
@@ -47,16 +49,18 @@ def scrape_pepper():
     # r = s.get(url_pepper.format(1))
     for page in range(pages_count(cookie)):
         page += 1
-        url = url_pepper.format(page)
-        resp = get(url)
+        # url = url_pepper.format(page)
+        # resp = get(url)
 
-        pages.append(find_free_offers(resp))
+        filtered_page = s.get(url_pepper.format(page), cookies=set_cookie())
+
+        pages.append(find_free_offers(filtered_page))
 
     return pages
 
 
-def find_free_offers(resp):
-    soup = bs(resp.text, 'html.parser')
+def find_free_offers(response):
+    soup = bs(response.text, 'html.parser')
     articles = soup.find_all('div', {'class': 'threadGrid'})
 
     data = []
@@ -64,15 +68,28 @@ def find_free_offers(resp):
     # for one page
     for article in articles:
         # price
-        # for_free = article.find('span', {'class': re.compile('thread-price')})
-        # TODO zmienic nazwe, sprawdzic zgodnosc znalezionych kursow do tych na stronie
-        offer_description = article.find('div', {'class': re.compile('title')}).strong.a
+        # price = article.find('span', {'class': re.compile('thread-price')})
+        # title = article.find('a', {'class': re.compile('thread-title')})
+        # re_href = ".*https://www.pepper.pl/promocje/.*"
+        title = article.find('a', href=re.compile(".*https://www.pepper.pl/promocje/.*"))
 
-        # for_free = article.find('span', {'class': re.compile('expired-threads')})
-        # if for_free is not None:
-        #     # print(for_free)
-        #     data.append(for_free)
+        # TODO: mam linki, teraz zrobic jakies dictionary do tego, dodac cene opisy, link, wypisywac nie wszystkie promocje
+        #   a tylko te za darmo i jedynie kursy a nie wszystkie oferty
 
-        data.append(offer_description)
+
+        # offer_description = article.find('div', {'class': re.compile('title')}).strong.a
+
+        # price = article.find('span', {'class': re.compile('expired-threads')})
+
+        # if price is not None:
+        #     data.append(price)
+        try:
+            data.append(title['href'])
+        except TypeError:
+            pass
+
+
+        # if offer_description is not None:
+        #     data.append(offer_description.text)
 
     return data
