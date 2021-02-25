@@ -13,6 +13,8 @@ urls = {'szkolenia i kursy': 'https://www.pepper.pl/grupa/szkolenia-i-kursy?page
         'udemy.com': 'https://www.pepper.pl/promocje/udemy.com?page={}'}
 
 
-courses = scrape_courses.scrape_pepper(urls['szkolenia i kursy'],
-                                       urls['uslugi i subskrypcje'],
-                                       urls['udemy.com'])
+szkolenia_kursy = scrape_courses.scrape_pepper(urls['szkolenia i kursy'])
+
+uslugi_subskrypcje = scrape_courses.scrape_pepper(urls['uslugi i subskrypcje'])
+
+udemy = scrape_courses.scrape_pepper(urls['udemy.com'])

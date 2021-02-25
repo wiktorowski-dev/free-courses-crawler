@@ -3,6 +3,7 @@ import requests
 import inspect
 from bs4 import BeautifulSoup as bs
 
+
 # url_pepper = 'https://www.pepper.pl/grupa/internet-i-uslugi?page={}'
 # url_pepper = 'https://www.pepper.pl/grupa/uslugi-i-subskrypcje?page={}'
 # urls = {'szkolenia i kursy': 'https://www.pepper.pl/grupa/szkolenia-i-kursy?page={}',
@@ -21,12 +22,6 @@ def get(url):
     return r
 
 
-def session():
-    s = requests.Session()
-    s.headers.update({
-        'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36"})
-    return s
-
 
 def pages_count(response):
     soup = bs(response.text, 'html.parser')
@@ -41,9 +36,9 @@ def pages_count(response):
 
 def set_cookie():
     # turn off expired offers
-    cookie_name = 'hide_expired'
-    cookie_value = '%221%22'
-    cookie = {cookie_name: cookie_value}
+    name = 'hide_expired'
+    value = '%221%22'
+    cookie = {name: value}
     return cookie
 
 
@@ -65,69 +60,23 @@ def set_cookie():
 #     return
 
 
+def scrape_pepper(url):
 
-
-
-def scrape_pepper():
-
-    # # /szkolenia-i-kursy
-    # endpoint_1_data = []
-    # # /uslugi-i-subskrypcje
-    # endpoint_2_data = []
-    # # /udemy.com
-    # endpoint_3_data = []
-
-    urls = ['https://www.pepper.pl/grupa/szkolenia-i-kursy?page={}',
-            'https://www.pepper.pl/grupa/uslugi-i-subskrypcje?page={}',
-            'https://www.pepper.pl/promocje/udemy.com?page={}']
+    session = requests.Session()
+    session.headers.update({
+        'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36"})
 
     data = []
 
-
     # set cookie to disable expired offers for every endpoint
-    # expired_on_endpoint_1 = session().get(uslugi_subskrypcje, cookies=set_cookie())
-    # expired_on_endpoint_2 = session().get(szkolenia_kursy, cookies=set_cookie())
-    # expired_on_endpoint_3 = session().get(udemy, cookies=set_cookie())
+    expired_on = session.get(url, cookies=set_cookie())
 
-    # argspec = inspect.getfullargspec(scrape_pepper)
+    for page in range(1, pages_count(expired_on) + 1):
+        filtered_page = session.get(url.format(page), cookies=set_cookie())
 
-    for endpoints in range(len(urls)):
-
-        expired_on = session().get(urls[endpoints], cookies=set_cookie())
-
-        for page in range(pages_count(expired_on)):
-            page += 1
-
-            filtered_page = session().get(urls[endpoints].format(page), cookies=set_cookie())
-
-            data.append(find_free_offers(filtered_page))
+        data.append(find_free_offers(filtered_page))
 
     return data
-
-
-
-    # for page in range(pages_count(expired_on_endpoint_1)):
-    #     page += 1
-    #
-    #     filtered_page = session().get(uslugi_subskrypcje.format(page), cookies=set_cookie())
-    #
-    #     endpoint_1_data.append(find_free_offers(filtered_page))
-    #
-    # for page in range(pages_count(expired_on_endpoint_2)):
-    #     page += 1
-    #
-    #     filtered_page = session().get(szkolenia_kursy.format(page), cookies=set_cookie())
-    #
-    #     endpoint_2_data.append(find_free_offers(filtered_page))
-    #
-    # for page in range(pages_count(expired_on_endpoint_3)):
-    #     page += 1
-    #
-    #     filtered_page = session().get(udemy.format(page), cookies=set_cookie())
-    #
-    #     endpoint_3_data.append(find_free_offers(filtered_page))
-
-    # return endpoint_1_data, endpoint_2_data, endpoint_3_data
 
 
 # SCRAPE WHOLE SITE /promocje
@@ -163,7 +112,7 @@ def find_free_offers(response):
         # price = article.find('span', {'class': re.compile('thread-price')})
         # title = article.find('a', {'class': re.compile('thread-title')})
         # re_href = ".*https://www.pepper.pl/promocje/.*"
-        title = article.find('a', href=re.compile("web|development|kursy"))
+        title = article.find('a', href=re.compile("web|development|kursy|programowanie"))
 
         # TODO: mam linki, teraz zrobic jakies dictionary do tego, dodac cene opisy, link, wypisywac nie wszystkie promocje
         #   a tylko te za darmo i jedynie kursy a nie wszystkie oferty
