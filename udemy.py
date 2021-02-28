@@ -12,6 +12,7 @@ def scrape_udemy(url):
 
     # ORIGIN UDEMY PAGES COUNT
     for page in range(1, pages_count(url) + 1):
+        time.sleep(30)
 
         # FOR TESTS ONLY
         # for page in range(1, 100):
@@ -58,10 +59,10 @@ def scrape_single_page(url):
 
         course_link = 'https://www.udemy.com{}'.format(link)
         # print(full_link)
-        if find_coupon(course_link) is not None:
-            data.append(find_coupon(course_link))
-        else:
-            pass
+        # if find_coupon(course_link) is not None:
+        data.append(find_coupon(course_link))
+        # else:
+        #     pass
 
     return data
 
@@ -70,44 +71,65 @@ def find_coupon(course_link):
     """ Find coupons in div as json
         return: link with already activated coupon
     """
-    response = requests.get(course_link)
-    soup = bs(response.text, 'lxml')
+    response = get(course_link)
 
-    urls, api_urls = [], []
+    parsed_course = bs(response.content, 'lxml')  # maybe add if with response.status_code == 200
+
+    urls, api_urls, working_coupons = [], [], []
 
     # dick key name -> "course_preview_path_w_return_link"
     # returns dick key value -> "dict_key_with_stored_coupon"
-    dict_key_with_stored_coupon = convert_to_json(soup)
+    dict_key_with_stored_coupon = convert_to_json(parsed_course)
 
     key_word = "couponCode"
 
     # looking for couponCode -> working or not
     if key_word in dict_key_with_stored_coupon:
+
         # extract coupon code from path
         coupon_name = dict_key_with_stored_coupon.partition("couponCode%3D")[2]
+        if '%' in coupon_name:
+            coupon_name = coupon_name.partition('%')[0]
+
 
         # print("couponCode found in: ", full_link)
         # print(dict_key_with_stored_coupons)
         url_with_attached_coupon = "{}?couponCode={}".format(course_link, coupon_name)
+        # urls.append(url_with_attached_coupon)
+        print('LINK: ', url_with_attached_coupon)
 
-        urls.append(url_with_attached_coupon)
-        print(urls)
+        # try:
+        course_id = parsed_course.body.attrs['data-clp-course-id']
+
+        # except KeyError:
+        #     pass
+        api_url = "https://www.udemy.com/api-2.0/course-landing-components/{}" \
+                  "/me/?components=buy_button,purchase,redeem_coupon,discount_expiration,gift_this_course&discountCode={}"\
+                  .format(course_id, coupon_name)
+
+        # print(api_url)
+
+        api_resp = get(api_url).json()
+        if api_resp["purchase"]["data"]["pricing_result"]["price"]["amount"] == 0:
+            working_coupons.append(course_link)
+            print("Finally found working coupon: ", working_coupons)
 
     else:
-        print("couponCode not found in: ", course_link)
+        # print("couponCode not found in: ", course_link)
         urls = None
 
-    return urls
+    return working_coupons
 
 
 def convert_to_json(soup):
     """ Converting dirty div to proper json format """
 
-    div_probably_with_coupon = soup.find('div',
-                                         {'class': 'ud-component--course-landing-page-udlite--introduction-asset'})
+    # div probably with coupon
+    path = soup.find('div', {'class': 'ud-component--course-landing-page-udlite--introduction-asset'})
 
     # Convert str(div) to json
-    target_json_div = div_probably_with_coupon['data-component-props']
+    target_json_div = path['data-component-props']
     proper_json = json.loads(target_json_div)
+    dict_key = proper_json['course_preview_path_w_return_link']
 
-    return proper_json
+    return dict_key

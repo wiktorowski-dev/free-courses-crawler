@@ -9,7 +9,7 @@ def get(url):
         "Accept-Language": "pl;q=0.7",
         "Accept-Encoding": "gzip, deflate, sdch",
         "Connection": "keep-alive",
-        'Cache-Control': 'private, max-age=0, no-cache'
+        # 'Content-Type': "text/plain"
 
     }
     r = requests.get(url, headers=headers)
