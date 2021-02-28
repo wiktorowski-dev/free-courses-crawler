@@ -1,10 +1,17 @@
 import requests
+from fake_useragent import UserAgent
 
 
 def get(url):
+    ua = UserAgent()
     headers = {
-        'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/88.0.4324.182 Safari/537.36",
-        "Accept-Language": "pl;q=0.7"}
+        "User-Agent": str(ua.chrome),
+        "Accept-Language": "pl;q=0.7",
+        "Accept-Encoding": "gzip, deflate, sdch",
+        "Connection": "keep-alive",
+        'Cache-Control': 'private, max-age=0, no-cache'
+
+    }
     r = requests.get(url, headers=headers)
     return r
 
