@@ -11,62 +11,41 @@ KEY_EXPRESSION = "couponCode%3D"  # key word with ascii '3D' -> '=', from json f
 def scrape_udemy(url):
     data = []
 
-    # empty_data = all(el for el in data) is True  # check if data is empty
-
     # ORIGIN UDEMY PAGES COUNT
     for page in range(1, pages_count(url) + 1):
-
         start_time = time()
-
         print('--------------------------- PAGE ', page, ' --------------------------------')
-        try:
-            data.append(scrape_single_page(url.format(page)))
-        except TypeError:
-            pass
-        sleep(randint(1, 5))
+        page_format_json = get(url.format(page)).json()
+        num_of_items = len(page_format_json['unit']['items'])
+
+        for item in range(num_of_items):
+            # course link
+            link = page_format_json['unit']['items'][0 + item]['url']
+
+            course_link = 'https://www.udemy.com{}'.format(link)
+
+            print(".", end=" ")
+            if find_free_coupon(course_link):
+                data.append(find_free_coupon(course_link))
+            else:
+                pass
+
+        # try:
+        #     data.append(scrape_single_page(url.format(page)))
+        # except TypeError as e:
+        #     print(e)
+        #     continue
+        # sleep(randint(1, 5))
 
         # save data to file every 10 runs of loop
         infile = 'raw-courses.csv'
 
-        if page % 1 == 0:
+        if page % 2 == 0:
             f = open(infile, 'w')
             f.write(str(data))
             f.close()
-        else:
-            pass
 
-        print("--- {} seconds ---".format(time() - start_time))
-
-    return data
-
-
-def scrape_single_page(url):
-    """ Scraping every of 16 courses from single page
-        :return
-    """
-    data = []
-
-    # scrape json of url
-    page_format_json = get(url).json()
-
-    num_of_items = len(page_format_json['unit']['items'])
-
-    for item in range(num_of_items):
-        # course title
-        # data.append(page_format_json['unit']['items'][0 + item]['title'])
-
-        sleep(randint(0, 2))
-
-        # course link
-        link = page_format_json['unit']['items'][0 + item]['url']
-
-        course_link = 'https://www.udemy.com{}'.format(link)
-        # print(full_link)
-        if find_free_coupon(course_link) is not None:
-            data.append(find_free_coupon(course_link))
-
-        else:
-            pass
+        print("\n{} seconds".format(time() - start_time))
 
     return data
 
@@ -78,12 +57,13 @@ def find_free_coupon(course_link):
     response = get(course_link)
     parsed_course = BeautifulSoup(response.content, 'lxml')  # maybe add if with response.status_code == 200
 
-    working_coupon = None
-    url_with_attached_coupon = None
+    # working_coupon = None
+    # url_with_attached_coupon = None
 
     # dick key name -> "course_preview_path_w_return_link"
     # returns dick key value -> "dict_key_with_stored_coupon"
     dict_key_with_stored_coupon = convert_to_json(parsed_course)
+
     if dict_key_with_stored_coupon is not None:
         # looking for couponCode -> working or not
         if KEY_WORD in dict_key_with_stored_coupon:
@@ -96,7 +76,7 @@ def find_free_coupon(course_link):
                 coupon_name = coupon_name.partition(KEY_CHAR)[0]
 
             url_with_attached_coupon = "{}?couponCode={}".format(course_link, coupon_name)
-            print('PROMOTION (less than 100% off): ', url_with_attached_coupon)
+            print('\nPROMOTION (less than 100% off): ', url_with_attached_coupon)
 
             course_id = parsed_course.body.attrs['data-clp-course-id']
 
@@ -104,14 +84,12 @@ def find_free_coupon(course_link):
                       "/me/?components=buy_button,purchase,redeem_coupon,discount_expiration," \
                       "gift_this_course&discountCode={}".format(course_id, coupon_name)
 
-            # print(api_url)
-
+            # API response with information about coupon (expired, working, price)
             api_resp = get(api_url).json()
+
             if api_resp["purchase"]["data"]["pricing_result"]["price"]["amount"] == 0:
                 working_coupon = course_link
-                print("Working coupon: ", working_coupon)
+                return working_coupon
     else:
-        url_with_attached_coupon = None
-
-    # return working_coupon
-    return url_with_attached_coupon
+        # working_coupon = None
+        pass
