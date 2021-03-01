@@ -1,11 +1,7 @@
-import re
 from udemy_settings import *
 from random import randint
-import requests
-import json
-import time
-
-from bs4 import BeautifulSoup as bs
+from bs4 import BeautifulSoup
+from time import sleep, time
 
 KEY_WORD = "couponCode"
 KEY_CHAR = "%"
@@ -15,25 +11,28 @@ KEY_EXPRESSION = "couponCode%3D"  # key word with ascii '3D' -> '=', from json f
 def scrape_udemy(url):
     data = []
 
+    empty_data = all(el for el in data) is True  # check if data is empty
+
     # ORIGIN UDEMY PAGES COUNT
     for page in range(1, pages_count(url) + 1):
 
-        start_time = time.time()
+        start_time = time()
 
         print('--------------------------- PAGE ', page, ' --------------------------------')
 
-        # if scrape_single_page(url.format(page)) :
         data.append(scrape_single_page(url.format(page)))
-
-        time.sleep(randint(1, 5))
+        sleep(randint(1, 5))
 
         # save data to file every 10 runs of loop
-        if page % 10 == 0:
+
+        if page % 10 == 0 and empty_data:
             f = open('courses.csv', 'w')
             f.write(str(data))
             f.close()
+        else:
+            pass
 
-        print("--- {} seconds ---".format(time.time() - start_time))
+        print("--- {} seconds ---".format(time() - start_time))
 
     return data
 
@@ -53,7 +52,7 @@ def scrape_single_page(url):
         # course title
         # data.append(page_format_json['unit']['items'][0 + item]['title'])
 
-        time.sleep(randint(0, 2))
+        sleep(randint(0, 2))
 
         # course link
         link = page_format_json['unit']['items'][0 + item]['url']
@@ -73,7 +72,7 @@ def find_free_coupon(course_link):
         :return link with already activated coupon
     """
     response = get(course_link)
-    parsed_course = bs(response.content, 'lxml')  # maybe add if with response.status_code == 200
+    parsed_course = BeautifulSoup(response.content, 'lxml')  # maybe add if with response.status_code == 200
 
     working_coupon = None
 
@@ -116,20 +115,3 @@ def find_free_coupon(course_link):
         pass
 
     return working_coupon
-
-
-def convert_to_json(parsed_course):
-    """ Converting dirty div to proper json format """
-
-    # div probably with coupon
-    path = parsed_course.find('div', {'class': 'ud-component--course-landing-page-udlite--introduction-asset'})
-
-    # Convert str(div) to json
-    try:
-        target_json_div = path['data-component-props']
-        proper_json = json.loads(target_json_div)
-        dict_key = proper_json['course_preview_path_w_return_link']
-    except TypeError:
-        dict_key = None
-
-    return dict_key
