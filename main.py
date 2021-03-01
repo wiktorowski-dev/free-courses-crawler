@@ -1,6 +1,7 @@
 import scrape_courses
 import udemy
 
+# URL of udemy.com/development -> only one category
 url = 'https://www.udemy.com/api-2.0/discovery-units/all_courses/?p={}&page_size=16&subcategory=&instructional_' \
       'level=&lang=&price=&duration=&closed_captions=&category_id=288&source_page=category_page&locale=pl_PL' \
       '&currency=pln&navigation' \

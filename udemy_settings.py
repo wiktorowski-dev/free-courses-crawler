@@ -17,7 +17,7 @@ def get(url):
 
 
 def pages_count(url):
-    whole_json = requests.get(url.format(1)).json()
+    whole_json = get(url.format(1)).json()
     pagination = whole_json['unit']['pagination']['total_page']
 
     return pagination
