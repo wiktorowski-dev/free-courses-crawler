@@ -11,7 +11,7 @@ KEY_EXPRESSION = "couponCode%3D"  # key word with ascii '3D' -> '=', from json f
 def scrape_udemy(url):
     data = []
 
-    empty_data = all(el for el in data) is True  # check if data is empty
+    # empty_data = all(el for el in data) is True  # check if data is empty
 
     # ORIGIN UDEMY PAGES COUNT
     for page in range(1, pages_count(url) + 1):
@@ -19,14 +19,17 @@ def scrape_udemy(url):
         start_time = time()
 
         print('--------------------------- PAGE ', page, ' --------------------------------')
-
-        data.append(scrape_single_page(url.format(page)))
+        try:
+            data.append(scrape_single_page(url.format(page)))
+        except TypeError:
+            pass
         sleep(randint(1, 5))
 
         # save data to file every 10 runs of loop
+        infile = 'raw-courses.csv'
 
-        if page % 10 == 0 and empty_data:
-            f = open('courses.csv', 'w')
+        if page % 1 == 0:
+            f = open(infile, 'w')
             f.write(str(data))
             f.close()
         else:
@@ -61,6 +64,7 @@ def scrape_single_page(url):
         # print(full_link)
         if find_free_coupon(course_link) is not None:
             data.append(find_free_coupon(course_link))
+
         else:
             pass
 
@@ -75,12 +79,12 @@ def find_free_coupon(course_link):
     parsed_course = BeautifulSoup(response.content, 'lxml')  # maybe add if with response.status_code == 200
 
     working_coupon = None
+    url_with_attached_coupon = None
 
     # dick key name -> "course_preview_path_w_return_link"
     # returns dick key value -> "dict_key_with_stored_coupon"
     dict_key_with_stored_coupon = convert_to_json(parsed_course)
     if dict_key_with_stored_coupon is not None:
-
         # looking for couponCode -> working or not
         if KEY_WORD in dict_key_with_stored_coupon:
 
@@ -106,12 +110,8 @@ def find_free_coupon(course_link):
             if api_resp["purchase"]["data"]["pricing_result"]["price"]["amount"] == 0:
                 working_coupon = course_link
                 print("Working coupon: ", working_coupon)
-
     else:
+        url_with_attached_coupon = None
 
-        raise Exception("Could not find coupon ! dict_key_with_stored_coupon is: "
-                        , dict_key_with_stored_coupon)
-
-        pass
-
-    return working_coupon
+    # return working_coupon
+    return url_with_attached_coupon
