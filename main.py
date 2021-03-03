@@ -1,14 +1,41 @@
-import scrape_courses
 import udemy_cat_development
+import teachinguide_api
 
 # /development -> only one category
-API_URL = 'https://www.udemy.com/api-2.0/discovery-units/all_courses/?p={}&page_size=16&subcategory=&instructional_' \
-      'level=&lang=&price=&duration=&closed_captions=&category_id=288&source_page=category_page&locale=pl_PL' \
-      '&currency=pln&navigation' \
-      '_locale=en_US&skip_price=true&sos=pc&fl=cat'
+UDEMY_API_URL = 'https://www.udemy.com/api-2.0/discovery-units/all_courses/?p={}&page_size=60&subcategory=' \
+                '&instructional_level=&lang=&price=&duration=&closed_captions=&sort=newest&category_id=288&' \
+                'source_page=category_page&locale=pl_PL&currency=pln&navigation_locale=en_US&skip_price=true' \
+                '&sos=pc&fl=cat'
 
-ud = udemy_cat_development.scrape_udemy(API_URL)
+x = 0
 
+while x != 10:
+    ud = udemy_cat_development.scrape_udemy(UDEMY_API_URL)
+    x += 1
+
+# TEACHINGUIDE_API_URL = "https://teachinguide.azure-api.net/course-coupon?sortCol=created_d&sortDir=DESC&length=100" \
+#                        "&page={}&inkw=&discount=100&language=English&ignore=true&"
+#
+# teachgd = teachinguide_api.scrape_teachinguide(TEACHINGUIDE_API_URL)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+# aa = udemy_cat_development.do_smth()
 
 # promo = scrape_courses.scrape_pepper(url)
 
