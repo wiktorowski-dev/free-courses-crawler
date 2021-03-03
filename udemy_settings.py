@@ -25,6 +25,14 @@ def pages_count(url):
     return pagination
 
 
+def tg_pages_count(url):
+    """ Getting amount of pages from api """
+    whole_json = get(url.format(1)).json()
+    pagination = whole_json['pages']
+
+    return pagination
+
+
 def convert_to_json(parsed_course):
     """ Converting dirty div to proper json format """
 
