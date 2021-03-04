@@ -18,7 +18,6 @@ def scrape_teachinguide(url):
 
 def get_links(page, url):
     start_time = time()  # timing start
-    print('--------------------------- PAGE ', page, ' --------------------------------')
 
     page_format_json = get(url.format(page)).json()
     num_of_items = len(page_format_json['results'])
