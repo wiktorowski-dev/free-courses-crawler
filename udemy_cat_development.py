@@ -1,5 +1,5 @@
 from datetime import datetime
-from time import time
+from time import time, sleep
 
 from bs4 import BeautifulSoup
 
@@ -10,6 +10,8 @@ KEY_CHAR = "%"
 KEY_EXPRESSION = "couponCode%3D"  # key word with ascii '3D' -> '=', from json file
 
 free_coupons = []
+
+
 # items = []
 
 
@@ -19,6 +21,7 @@ def scrape_udemy(url):
      """
 
     # ORIGIN UDEMY PAGES COUNT
+
     for page in range(1, pages_count(url) + 1):
 
         start_time = time()
@@ -27,7 +30,10 @@ def scrape_udemy(url):
 
         page_format_json = get(url.format(page)).json()
 
-        num_of_items = len(page_format_json['unit']['items'])
+        try:
+            num_of_items = len(page_format_json['unit']['items'])
+        except (IndexError, KeyError):
+            continue
 
         f = open('items.csv', 'w')
         s1 = '\n'.join(free_coupons)
@@ -47,6 +53,7 @@ def scrape_udemy(url):
         save_to_file()
 
         for item in range(num_of_items):
+
             link = page_format_json['unit']['items'][0 + item]['url']
             course_link = 'https://www.udemy.com{}'.format(link)
 
@@ -62,6 +69,7 @@ def scrape_udemy(url):
 
             if find_coupon(course_link):
                 free_coupons.append(find_coupon(course_link))
+            sleep(0.5)
             # check_and_append(course_link)
 
             print(".", end=" ")
@@ -124,10 +132,11 @@ def gather_free_coupon(course_link, coupon_name, parsed_course):
     api_resp = get(api_url).json()
 
     discount = api_resp["purchase"]["data"]["pricing_result"]["discount_percent"]
-    code = api_resp["purchase"]["data"]["pricing_result"]["code"]
-    classic_code = "KEEPLEARNING"
 
-    if discount != 100 and code != classic_code:
+    # code = api_resp["purchase"]["data"]["pricing_result"]["code"]
+    # classic_code = "KEEPLEARNING"
+
+    if discount != 100:
         print('\nPROMOTION - {}% off): '.format(discount), url_with_attached_coupon)
 
     else:
@@ -138,4 +147,3 @@ def gather_free_coupon(course_link, coupon_name, parsed_course):
         print('\nFREE COURSE !!!): ', url_with_attached_coupon)
 
         return working_coupon
-
