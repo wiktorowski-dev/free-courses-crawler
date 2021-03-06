@@ -7,7 +7,9 @@ from udemy_scraper.scrapers.subcategory_web_dev import UdemyWebDevelopment
 api = UdemyWebDevelopment.create_url('Web+Development&')
 
 if __name__ == '__main__':
+    # UdemyWebDevelopment.run(UdemyWebDevelopment(), api)
     asyncio.run(UdemyWebDevelopment.run(UdemyWebDevelopment(), api))
+    # print(api)
     # loop = asyncio.get_event_loop()
     # loop.run_until_complete(UdemyWebDevelopment.run(UdemyWebDevelopment(), api))
 

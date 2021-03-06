@@ -1,4 +1,5 @@
 import asyncio
+from timer import timer
 import httpx
 from datetime import datetime
 from bs4 import BeautifulSoup
@@ -56,6 +57,8 @@ class UdemyWebDevelopment(object):
 
         return self.links
 
+    # async def tryCouroutine(self):
+
     async def check_link(self, page):
         """
         Checking if provided link have free coupon and adding into list
@@ -66,9 +69,12 @@ class UdemyWebDevelopment(object):
         print('PAGE', page)
 
         for link in range(len(self.links)):
+        # for link in await asyncio.gather(*map(self.))
             print(".", end=" ")
             course_link = self.links[link]
+
             # course_link = await self.links[i]
+
             if await self.find_coupon(course_link):
                 self.free_coupons.append(self.find_coupon(course_link))
 
@@ -131,7 +137,7 @@ class UdemyWebDevelopment(object):
             print('\nFREE COURSE !!!): ', url_with_attached_coupon)
 
             return working_coupon
-
+        # return url_with_attached_coupon
     @staticmethod
     def create_url(category):
         api_template = "https://udemy.com/api-2.0/discovery-units/all_courses/?"
