@@ -1,6 +1,10 @@
-import asyncio
-from timer import timer
-import httpx
+# import asyncio
+# from timer import timer
+import re
+# import httpx
+import datetime
+import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import datetime
 from bs4 import BeautifulSoup
 from udemy_scraper.scrapers.base_scraper import BaseScraper
@@ -22,72 +26,106 @@ class UdemyWebDevelopment(object):
     """
     Contains any logic related to scraping of data from udemy.com/development/Web+Development
     """
-    # links = []
-
     def __init__(self, free_coupons=[], links=[]):
         super(UdemyWebDevelopment, self).__init__()
         self.free_coupons = free_coupons
         self.links = links
 
-    async def run(self, url):
+    def run(self, url):
+        pages = self.pages_count(url) + 1
+        urls = [url.format(page) for page in range(1, pages)]
 
-        for page in range(1, self.pages_count(url) + 1):
-            try:
-                self.get_links_from_page(url, page)
-                await self.check_link(page)
-                if page == self.pages_count(url):
-                    self.save_to_file()
-            except (IndexError, KeyError):
-                continue
+        # First loop to download from links
+        threads = []
+        result = []
+        i_1 = 0
+        with ThreadPoolExecutor(max_workers=10) as executor:
+            i_1 += 1
+            for url in urls:
+                threads.append(executor.submit(self.get_links_from_page, url))
 
-    def get_links_from_page(self, url, page):
+            for task in as_completed(threads):
+                # time.sleep(0.2)
+                result.extend(task.result())
+
+        # Second loop to download from links
+        second_result = []
+        threads = []
+        start = datetime.now()
+        done = []
+        with ThreadPoolExecutor(max_workers=50) as executor:
+            i_1 += 1
+            for url in result:
+                done.append(url)
+                threads.append(executor.submit(self.check_link, url))
+                print(f'{len(done)}/{len(result)}')
+
+            i2 = 0
+            for task in as_completed(threads):
+                print(f'{i2}/{len(threads)}')
+                i2+=1
+                second_result.append(task.result())
+
+        # for page in range(1, self.pages_count(url) + 1):
+        #     try:
+        #         self.get_links_from_page(url, page)
+        #
+        #     except (IndexError, KeyError):
+        #         continue
+        end = datetime.now()
+        second_result = [x for x in second_result if x]
+        print('as')
+
+    def get_links_from_page(self, url):
         """ Scraping page and inside page, scraping all 16 courses
             :return list of courses links
          """
 
-        page_format_json = get_requests(url.format(page)).json()
+        page_format_json = get_requests(url).json()
 
         num_of_items = len(page_format_json['unit']['items'])
+
+        sub_links = []
 
         for item in range(num_of_items):
             link = page_format_json['unit']['items'][0 + item]['url']
             course_link = 'https://www.udemy.com{}'.format(link)
-            self.links.append(course_link)
+            sub_links.append(course_link)
         # await asyncio.gather(*self.links)
 
-        return self.links
+        return sub_links
 
     # async def tryCouroutine(self):
 
-    async def check_link(self, page):
+    def check_link(self, page):
         """
         Checking if provided link have free coupon and adding into list
         :param page, only for printing
 
         """
         start_time = time()
-        print('PAGE', page)
-
-        for link in range(len(self.links)):
-        # for link in await asyncio.gather(*map(self.))
-            print(".", end=" ")
-            course_link = self.links[link]
+        # print('PAGE', page)
+        #
+        # for link in range(len(self.links)):
+        # # for link in await asyncio.gather(*map(self.))
+        #     print(".", end=" ")
+        #     course_link = self.links[link]
 
             # course_link = await self.links[i]
+        coupon = self.find_coupon(page)
+        if coupon:
+            return coupon
+        else:
+            return ''
 
-            if await self.find_coupon(course_link):
-                self.free_coupons.append(self.find_coupon(course_link))
+        # print("\n{} seconds".format(time() - start_time))
+        # self.links.clear()
 
-        print("\n{} seconds".format(time() - start_time))
-        self.links.clear()
-
-    async def find_coupon(self, course_link):
+    def find_coupon(self, course_link):
         """ Find coupons in div as json
             :return link with already activated coupon
         """
-        async with httpx.AsyncClient() as client:
-        # response = get_requests(course_link)
-            response = await client.get(course_link)
+        response = get_requests(course_link)
 
         parsed_course = BeautifulSoup(response.content, 'lxml')  # maybe add if with response.status_code == 200
 
@@ -107,9 +145,10 @@ class UdemyWebDevelopment(object):
                 if '%' in coupon_name:
                     coupon_name = coupon_name.partition('%')[0]
 
-                return self.gather_free_coupon(course_link, coupon_name, parsed_course)
+                free_coupon = self.gather_free_coupon(course_link, coupon_name, parsed_course)
+                return free_coupon
         else:
-            pass
+            return ''
 
     @staticmethod
     def gather_free_coupon(course_link, coupon_name, parsed_course):
@@ -129,12 +168,12 @@ class UdemyWebDevelopment(object):
 
         discount = api_resp["purchase"]["data"]["pricing_result"]["discount_percent"]
 
-        if discount != 100:
-            print('\nPROMOTION - {}% off): '.format(discount), url_with_attached_coupon)
+        # if discount != 100:
+        #     print('\nPROMOTION - {}% off): '.format(discount), url_with_attached_coupon)
 
         if api_resp["purchase"]["data"]["pricing_result"]["price"]["amount"] == 0:
             working_coupon = url_with_attached_coupon
-            print('\nFREE COURSE !!!): ', url_with_attached_coupon)
+            # print('\nFREE COURSE !!!): ', url_with_attached_coupon)
 
             return working_coupon
         # return url_with_attached_coupon

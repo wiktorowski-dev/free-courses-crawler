@@ -1,11 +1,11 @@
 from ast import parse
 
-import aiohttp
+# import aiohttp
 import requests
 from fake_useragent import UserAgent
 
 
-async def get_aiohttp(url):
+def get_aiohttp(url):
     """
     Send GET request to the url passed in
     :param url: The Url to get call get request on
@@ -20,12 +20,11 @@ async def get_aiohttp(url):
         # 'Content-Type': "application/json"
     }
     try:
-        async with aiohttp.ClientSession as session:
-            async with session.get(url, headers=headers) as response:
-                data = await response.read()
-                # data = parse(await response.json())
-                return data
-                # print(await response.json())
+        response = requests.get(url, headers=headers)
+        data = response.text()
+        # data = parse(await response.json())
+        return data
+        # print(await response.json())
     except Exception as e:
         print(f"Error in get request: {e}")
 
