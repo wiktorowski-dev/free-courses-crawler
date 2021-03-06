@@ -1,3 +1,5 @@
+from ast import parse
+
 import aiohttp
 import requests
 from fake_useragent import UserAgent
@@ -20,8 +22,9 @@ async def get_aiohttp(url):
     try:
         async with aiohttp.ClientSession as session:
             async with session.get(url, headers=headers) as response:
-                text = await response.read()
-                return text
+                data = await response.read()
+                # data = parse(await response.json())
+                return data
                 # print(await response.json())
     except Exception as e:
         print(f"Error in get request: {e}")

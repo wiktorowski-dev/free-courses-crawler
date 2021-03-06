@@ -2,29 +2,21 @@ import asyncio
 from functools import reduce
 from typing import List
 
-from udemy_scraper.scrapers.subcategory_web_dev import UdemySubCatWebDevelopmentScraper
+from udemy_scraper.scrapers.subcategory_web_dev import UdemyWebDevelopment
+
+api = UdemyWebDevelopment.create_url('Web+Development&')
 
 if __name__ == '__main__':
-    api = UdemySubCatWebDevelopmentScraper.create_url()
-    UdemySubCatWebDevelopmentScraper.pages_count(api)
+    asyncio.run(UdemyWebDevelopment.run(UdemyWebDevelopment(), api))
+    # loop = asyncio.get_event_loop()
+    # loop.run_until_complete(UdemyWebDevelopment.run(UdemyWebDevelopment(), api))
+
+
 # class ScraperManager:
-#     def __init__(
-#         self, tutorialbar_enabled, discudemy_enabled, coursevania_enabled, max_pages
-#     ):
-#         self.tutorialbar_scraper = TutorialBarScraper(
-#             tutorialbar_enabled, max_pages=max_pages
-#         )
-#         self.discudemy_scraper = DiscUdemyScraper(
-#             discudemy_enabled, max_pages=max_pages
-#         )
-#         self.coursevania_scraper = CoursevaniaScraper(
-#             coursevania_enabled, max_pages=max_pages
-#         )
-#         self._scrapers = (
-#             self.tutorialbar_scraper,
-#             self.discudemy_scraper,
-#             self.coursevania_scraper,
-#         )
+#     def __init__(self, UdemyWebDevelopment_enabled):
+#         self.UdemyWebDevelopment_scraper = UdemyWebDevelopment(UdemyWebDevelopment_enabled)
+#
+#         self._scrapers = (self.UdemyWebDevelopment_scraper)
 #
 #     async def run(self) -> List:
 #         """
